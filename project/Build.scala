@@ -20,7 +20,7 @@ object Versions {
   val scalatest = "2.0.M5-B1"
 
   val fest = "1.4"
-  val lift = "2.4"
+  val lift = "2.5-M4"
 }
 
 object Dependencies {
@@ -29,13 +29,12 @@ object Dependencies {
 
   // mongodb and related
   val liftJson              = "net.liftweb"            %% "lift-json"             % Versions.lift
-  val casbah                = "org.mongodb"            %% "casbah"                % "2.4.1"
+  val casbah                = "org.mongodb"            %% "casbah-core"           % "2.5.0"
   val mongo                 = "org.mongodb"            %  "mongo-java-driver"     % "2.9.2"
   val liftMongoRecord       = "net.liftweb"            %% "lift-mongodb-record"   % Versions.lift withSources()
-  val rogue                 = "com.foursquare"         %% "rogue"                 % "1.1.8" intransitive()
+  val rogue                 = "com.foursquare"         %% "rogue-lift"            % "2.0.0-beta22" intransitive() withSources()
 
-
-  val rogueAll = Seq(liftJson, casbah, mongo, liftMongoRecord, rogue, liftMongoRecord)
+  val rogueAll = Seq(liftJson, casbah, mongo, rogue, liftMongoRecord)
 
   // Logging
   val slf4s                 = "com.weiglewilczek.slf4s" %% "slf4s"                % "1.0.7"
@@ -90,8 +89,7 @@ object BuildSettings {
       organization := "pl.krakowscala",
       name         := "dissecting.rogue",
       version      := "1.0",
-//      scalaVersion := "2.10.0-RC5",
-      scalaVersion := "2.9.1",
+      scalaVersion := "2.10.0",
       libraryDependencies ++= dependencies
     )
 
@@ -118,11 +116,11 @@ object ScalaWorkshopBuild extends Build {
   import Dependencies._
   import BuildSettings._
 
-  lazy val rogueDsl_291 = Project(
+  lazy val rogueDsl = Project(
     "rogue-dsl",
     file("21-rogue-dsl"),
     settings = buildSettings ++ Seq(
-      libraryDependencies ++= testing_2_9 ++ rogueAll
+      libraryDependencies ++= testing_2_10 ++ rogueAll
     ) ++ mongoSpecSettings
   )
 
@@ -133,7 +131,7 @@ object ScalaWorkshopBuild extends Build {
       Seq (
       )
   ) aggregate (
-    rogueDsl_291
+    rogueDsl
   )
 
 }
