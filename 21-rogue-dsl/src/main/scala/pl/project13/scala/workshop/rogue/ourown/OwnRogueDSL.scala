@@ -10,19 +10,14 @@ import com.mongodb.BasicDBObject
 import com.mongodb.casbah.commons.ValidBSONType.DBObject
 import org.bson.BasicBSONObject
 
-// todo extends all DSLs
+trait OwnRogueDSL extends WhereDSL with QueryFieldDSL
 
-
-trait OwnRogueDSL // extends where? query field?
-
-// todo implement Companion Object
+object OwnRogueDSL extends OwnRogueDSL
 
 trait WhereDSL {
 
   implicit def addRogueDSL[M <: MongoRecord[M]](meta: MongoMetaRecord[M]) =
-    throw new RuntimeException("Not implemented yet!") // TODO implement me
-
-  // OwnRogueQueryBuilder
+    new OwnRogueQueryBuilder(meta)(Nil)
 }
 
 trait QueryFieldDSL {
@@ -30,12 +25,11 @@ trait QueryFieldDSL {
   implicit def addStringFieldQueryClause[Owner <: MongoRecord[Owner]](field: StringField[Owner]) =
     StringFieldClauses(field)
 
-  // todo same thing for IntField?
+  implicit def addIntFieldQueryClause[Owner <: MongoRecord[Owner]](field: IntField[Owner]) =
+    IntFieldClauses(field)
 }
 
-trait QueryField {
-  def field: BaseField
-}
+trait QueryField { def field: BaseField }
 
 trait DefaultQueryField extends QueryField {
   def eqs(value: String) = WhereQueryClause(field.name, value)
@@ -43,22 +37,21 @@ trait DefaultQueryField extends QueryField {
 }
 
 trait NumericQueryField extends QueryField {
-  def gt(value: String) = WhereQueryClause(field.name, "gt", value)
+  def gt(value: String)  = WhereQueryClause(field.name, "gt",  value)
   def gte(value: String) = WhereQueryClause(field.name, "gte", value)
-  def lt(value: String) = WhereQueryClause(field.name, "lt", value)
+  def lt(value: String)  = WhereQueryClause(field.name, "lt",  value)
   def lte(value: String) = WhereQueryClause(field.name, "lte", value)
 }
 
 case class StringFieldClauses(override val field: BaseField) extends DefaultQueryField
-case class IntFieldClauses(override val field: BaseField) extends DefaultQueryField with NumericQueryField
+case class    IntFieldClauses(override val field: BaseField) extends DefaultQueryField with NumericQueryField
 
-class OwnRogueQueryBuilder[Owner <: MongoRecord[Owner]](meta: MongoMetaRecord[Owner], val whereParts: List[QueryClause] = Nil) {
+class OwnRogueQueryBuilder[Owner <: MongoRecord[Owner]]
+                          (meta: MongoMetaRecord[Owner])
+                          (val whereParts: List[QueryClause] = Nil) {
 
   def where(queryOn: Owner => QueryClause) =
-    new OwnRogueQueryBuilder(
-      meta,
-      whereParts = queryOn(meta.createRecord) :: whereParts
-    )
+    new OwnRogueQueryBuilder(meta)(whereParts = queryOn(meta.createRecord) :: whereParts)
 
   def findAll(): List[Owner] = {
     MongoDB.useCollection(meta.mongoIdentifier, meta.collectionName) { db =>
@@ -86,9 +79,8 @@ class OwnRogueQueryBuilder[Owner <: MongoRecord[Owner]](meta: MongoMetaRecord[Ow
 }
 
 case class QueryClause(key: String, value: Any)
-object WhereQueryClause {
 
-  import net.liftweb.json.JsonDSL._
+object WhereQueryClause {
 
   def apply(field: String, value: String) =
     new QueryClause(field, value)

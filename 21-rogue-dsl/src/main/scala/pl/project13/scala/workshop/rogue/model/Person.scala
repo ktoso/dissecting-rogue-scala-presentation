@@ -1,7 +1,7 @@
 package pl.project13.scala.workshop.rogue.model
 
 import net.liftweb.mongodb.record.{MongoMetaRecord, MongoRecord}
-import net.liftweb.mongodb.record.field.{MongoListField, IntPk}
+import net.liftweb.mongodb.record.field.IntPk
 import net.liftweb.record.field._
 import pl.project13.scala.workshop.mongo.MongoConfig.MainMongoIdentifier
 
@@ -12,9 +12,7 @@ class UglyPerson {
 }
 
 //     |
-//     |
 //  becomes
-//     |
 //     |
 //     V
 
@@ -25,26 +23,18 @@ case class SimplePerson(
 )
 
 //     |
-//     |
 //  becomes
 //     |
-//     |
 //     V
-
-
 
 class Person extends MongoRecord[Person] with IntPk[Person] {
   override val meta = Person
 
-  throw new RuntimeException("Not implemented yet!") // TODO implement me
-
-  object firstName
-  object lastName
-  object age
+  object firstName extends StringField[Person](this, 255)
+  object lastName  extends StringField[Person](this, 255)
+  object age       extends IntField[Person](this)
 
 }
-
-
 
 object Person extends Person with MongoMetaRecord[Person] {
 
@@ -52,11 +42,13 @@ object Person extends Person with MongoMetaRecord[Person] {
   override def collectionName = "persons"
 
   def ensureIndexes() {
-    throw new RuntimeException("Not implemented yet!") // TODO implement me
-    // todo show ensureIndex()
+    import net.liftweb.json.JsonDSL._
+    ensureIndex((firstName.name -> 1) ~ (lastName.name -> 1))
   }
 
-  def findByName(name: String) =
-    throw new RuntimeException("Not implemented yet!") // TODO implement me
+  def byName(name: String): List[Person] = {
+    import pl.project13.scala.workshop.rogue.ourown.OwnRogueDSL._
+    meta where(_.firstName eqs name) findAll()
+  }
 
 }
